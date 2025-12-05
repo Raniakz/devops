@@ -10,14 +10,13 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
+        script { echo "Branch: ${env.BRANCH_NAME ?: 'unknown'}" }
       }
     }
 
     stage('Clean + Build Maven') {
       steps {
-        sh '''
-          docker run --rm -v $PWD:/app -w /app maven:3.9.0-eclipse-temurin-17 mvn clean package -DskipTests=false
-        '''
+        sh 'mvn -B clean package -DskipTests=false'
       }
       post {
         success {
@@ -28,9 +27,7 @@ pipeline {
 
     stage('Unit Tests') {
       steps {
-        sh '''
-          docker run --rm -v $PWD:/app -w /app maven:3.9.0-eclipse-temurin-17 mvn test
-        '''
+        sh 'mvn test'
       }
     }
 
