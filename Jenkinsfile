@@ -1,10 +1,5 @@
 pipeline {
-  agent {
-    docker {
-      image 'maven:3.9.0-eclipse-temurin-17'  // Maven + JDK 17
-      args '-v /root/.m2:/root/.m2'           // cache Maven repo
-    }
-  }
+  agent any
 
   environment {
     DOCKER_IMAGE = "raniaouss24/devops"
@@ -15,13 +10,14 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
-        script { echo "Branch: ${env.BRANCH_NAME ?: 'unknown'}" }
       }
     }
 
     stage('Clean + Build Maven') {
       steps {
-        sh 'mvn -B clean package -DskipTests=false'
+        sh '''
+          docker run --rm -v $PWD:/app -w /app maven:3.9.0-eclipse-temurin-17 mvn clean package -DskipTests=false
+        '''
       }
       post {
         success {
@@ -32,7 +28,9 @@ pipeline {
 
     stage('Unit Tests') {
       steps {
-        sh 'mvn test'
+        sh '''
+          docker run --rm -v $PWD:/app -w /app maven:3.9.0-eclipse-temurin-17 mvn test
+        '''
       }
     }
 
