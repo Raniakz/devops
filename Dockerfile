@@ -1,14 +1,14 @@
-# Use a valid OpenJDK 17 slim image
-FROM openjdk:17-slim
+FROM eclipse-temurin:17-jre-alpine
 
-# Set working directory
+# Optional: set working directory
 WORKDIR /app
 
-# Copy the built JAR into the container
-COPY target/*.jar app.jar
+# Copy the built JAR from target/ into the container
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
 
-# Expose application port
+# Expose port if your app listens on it (optional)
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","/app.jar"]
