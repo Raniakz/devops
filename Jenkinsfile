@@ -89,11 +89,16 @@ pipeline {
     }
   }
 
-  post {
-    success {
-      echo "Pipeline succeeded: ${DOCKER_IMAGE}"
-      echo "Application deployed to Kubernetes!"
+
+    post {
+        success {
+          echo "Pipeline succeeded: ${DOCKER_IMAGE}"
+          echo "Application deployed to Kubernetes!"
+        }
+        failure {
+          echo "Pipeline failed"
+          sh 'kubectl get pods -n devops || true'
+          sh 'kubectl logs -l app=spring-app -n devops --tail=50 || true'
+        }
+      }
     }
-    failure {
-      echo "Pipeline failed"
-      sh 'kubectl get pods -n devops || true'
