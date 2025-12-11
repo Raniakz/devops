@@ -36,6 +36,7 @@ pipeline {
         script {
           def tag = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
           sh "docker build -t ${DOCKER_IMAGE}:${tag} ."
+          sh "docker tag ${DOCKER_IMAGE}:${tag} ${DOCKER_IMAGE}:latest"
         }
       }
     }
@@ -47,15 +48,52 @@ pipeline {
             echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
             TAG=$(git rev-parse --short HEAD)
             docker push ${DOCKER_IMAGE}:$TAG
+            docker push ${DOCKER_IMAGE}:latest
             docker logout
           '''
+        }
+      }
+    }
+
+    stage('Deploy to Kubernetes') {
+      steps {
+        script {
+          echo "Deploying to Kubernetes cluster..."
+          sh 'kubectl apply -f k8s/mysql-pv.yaml'
+          sh 'kubectl apply -f k8s/mysql-pvc.yaml'
+          sh 'kubectl apply -f k8s/mysql-deployment.yaml'
+          sh 'kubectl apply -f k8s/mysql-service.yaml'
+          sh 'kubectl apply -f k8s/spring-deployment.yaml'
+          sh 'kubectl apply -f k8s/spring-service.yaml'
+
+          echo "Waiting for MySQL to be ready..."
+          sh 'kubectl wait --for=condition=ready pod -l app=mysql -n devops --timeout=300s'
+
+          echo "Restarting Spring Boot deployment to pull latest image..."
+          sh 'kubectl rollout restart deployment/spring-app -n devops'
+          sh 'kubectl rollout status deployment/spring-app -n devops --timeout=300s'
+
+          echo "Deployment completed successfully!"
+        }
+      }
+    }
+
+    stage('Verify Deployment') {
+      steps {
+        script {
+          echo "Checking deployment status..."
+          sh 'kubectl get pods -n devops'
+          sh 'kubectl get svc -n devops'
         }
       }
     }
   }
 
   post {
-    success { echo "Pipeline succeeded: ${DOCKER_IMAGE}" }
-    failure { echo "Pipeline failed" }
-  }
-}
+    success {
+      echo "Pipeline succeeded: ${DOCKER_IMAGE}"
+      echo "Application deployed to Kubernetes!"
+    }
+    failure {
+      echo "Pipeline failed"
+      sh 'kubectl get pods -n devops || true'
