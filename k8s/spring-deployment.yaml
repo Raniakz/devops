@@ -36,7 +36,7 @@ spec:
       containers:
         - name: spring-app
           image: raniaouss24/devops:latest
-          imagePullPolicy: Always
+          imagePullPolicy: Never
           ports:
             - containerPort: 8080
           env:
