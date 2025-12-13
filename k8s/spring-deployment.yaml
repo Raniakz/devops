@@ -13,8 +13,8 @@ metadata:
   namespace: devops
 type: Opaque
 data:
-  DB_USER: cm9vdA==        # root in base64
-  DB_PASSWORD: cm9vdA==    # root in base64
+  DB_USER: cm9vdA==
+  DB_PASSWORD: cm9vdA==
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -31,9 +31,12 @@ spec:
       labels:
         app: spring-app
     spec:
+      imagePullSecrets:
+        - name: dockerhub-secret
       containers:
         - name: spring-app
           image: raniaouss24/devops:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
