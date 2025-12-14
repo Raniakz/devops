@@ -31,6 +31,21 @@ pipeline {
       }
     }
 
+    stage('SonarQube Analysis') {
+      steps {
+        echo '📊 Analyse SonarQube en cours...'
+        withSonarQubeEnv('SonarQube') { // Nom du serveur SonarQube configuré dans Jenkins
+          sh '''
+            mvn sonar:sonar \
+              -Dsonar.projectKey=tp-foyer \
+              -Dsonar.projectName="TP Foyer" \
+              -Dsonar.host.url=http://192.168.33.10:9000 \
+              -Dsonar.login=<SONAR_TOKEN>
+          '''
+        }
+      }
+    }
+
     stage('Docker Build') {
       steps {
         script {
@@ -89,16 +104,16 @@ pipeline {
     }
   }
 
-
-    post {
-        success {
-          echo "Pipeline succeeded: ${DOCKER_IMAGE}"
-          echo "Application deployed to Kubernetes!"
-        }
-        failure {
-          echo "Pipeline failed"
-          sh 'kubectl get pods -n devops || true'
-          sh 'kubectl logs -l app=spring-app -n devops --tail=50 || true'
-        }
-      }
+  post {
+    success {
+      echo "Pipeline succeeded: ${DOCKER_IMAGE}"
+      echo "Application deployed to Kubernetes!"
+      echo "SonarQube report: http://192.168.33.10:9000"
     }
+    failure {
+      echo "Pipeline failed"
+      sh 'kubectl get pods -n devops || true'
+      sh 'kubectl logs -l app=spring-app -n devops --tail=50 || true'
+    }
+  }
+}
