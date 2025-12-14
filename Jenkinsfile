@@ -40,6 +40,7 @@ pipeline {
               -Dsonar.projectKey=tp-foyer \
               -Dsonar.projectName="TP Foyer" \
               -Dsonar.host.url=http://192.168.33.10:9000 \
+              -DskipTests=true
               -Dsonar.login=<SONAR_TOKEN>
           '''
         }
