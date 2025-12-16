@@ -1,0 +1,71 @@
+package com.example.rania.Service;
+
+import com.example.rania.Entity.Bloc;
+import com.example.rania.Entity.Foyer;
+import com.example.rania.Entity.Universite;
+import com.example.rania.Repository.FoyerRepository;
+import com.example.rania.Repository.UniversiteRepository;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class FoyerService implements IFoyerService {
+    private final FoyerRepository foyerRepository;
+    private final UniversiteRepository universiteRepository;
+
+    public FoyerService(FoyerRepository foyerRepository, UniversiteRepository universiteRepository) {
+        this.foyerRepository = foyerRepository;
+        this.universiteRepository = universiteRepository;
+    }
+
+    @Override
+    public Foyer create(Foyer foyer) {
+        return foyerRepository.save(foyer);
+    }
+
+    @Override
+    public Foyer update(Long id, Foyer foyer) {
+        foyer.setIdFoyer(id);
+        return foyerRepository.save(foyer);
+    }
+
+    @Override
+    public void delete(Long id) {
+        foyerRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Foyer> getAll() {
+        return foyerRepository.findAll();
+    }
+
+    @Override
+    public Foyer getById(Long id) {
+        return foyerRepository.findById(id).orElseThrow(() -> new RuntimeException("Foyer not found"));
+    }
+
+    @Override
+    @Transactional
+    public Foyer ajouterFoyerEtAffecterAUniversite(Foyer foyer, long idUniversite) {
+        Universite universite = universiteRepository.findById(idUniversite)
+                .orElseThrow(() -> new RuntimeException("Universite not found with id: " + idUniversite));
+
+
+        if (foyer.getBlocs() != null) {
+            for (Bloc bloc : foyer.getBlocs()) {
+                bloc.setFoyer(foyer);
+            }
+        }
+
+        Foyer savedFoyer = foyerRepository.save(foyer);
+
+        universite.setFoyer(savedFoyer);
+
+        universiteRepository.save(universite);
+
+        return savedFoyer;
+    }
+}

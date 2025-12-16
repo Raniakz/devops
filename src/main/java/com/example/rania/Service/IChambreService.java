@@ -1,0 +1,27 @@
+package com.example.rania.Service;
+
+import com.example.rania.Entity.Chambre;
+import com.example.rania.Utils.Enum.TypeChambre;
+import java.util.List;
+
+public interface IChambreService {
+    Chambre create(Chambre chambre);
+
+    Chambre update(Long id, Chambre chambre);
+
+    void delete(Long id);
+
+    List<Chambre> getAll();
+
+    Chambre getById(Long id);
+
+    Chambre affecterChambreABloc(Long idChambre, Long idBloc);
+
+    List<Chambre> getChambresParNomUniversite(String nomUniversite);
+
+    List<Chambre> getChambresParBlocEtType(long idBloc, TypeChambre typeC);
+
+    List<Chambre> getChambresNonReserveParNomUniversiteEtTypeChambre(String nomUniversite, TypeChambre type);
+
+}
+
